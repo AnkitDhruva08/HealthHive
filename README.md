@@ -93,3 +93,160 @@ HealthHive/
 └── scripts/                   # Utility scripts
     ├── seed_db.py              # Seed demo data
     ├── backup_db.sh
+
+
+
+
+
+
+
+
+
+
+<!-- Architecture Diagram -->
+                ┌────────────────────────────────────┐
+                │          Mobile / Web App           │
+                │  (React Native / PWA for Patients   │
+                │     & Doctors)                      │
+                └────────────────────────────────────┘
+                             │
+                             ▼
+                ┌────────────────────────────────────┐
+                │         API Gateway (FastAPI)       │
+                │ - Handles all requests              │
+                │ - Authentication & Authorization   │
+                │ - API rate limiting                 │
+                └────────────────────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+┌────────────────┐  ┌───────────────────────┐  ┌────────────────────┐
+│  AI Engine     │  │  Real-Time Service    │  │  Database Layer     │
+│ (TensorFlow    │  │ (WebSockets / MQTT)   │  │ (PostgreSQL +       │
+│ Lite + PyTorch)│  │  - Live vital updates │  │  TimescaleDB)       │
+│  - Anomaly     │  │  - Alerts dispatch    │  │  - Medical records  │
+│ detection      │  │  - Doctor matching    │  │  - Vitals time-series│
+└────────────────┘  └───────────────────────┘  └────────────────────┘
+        │                     │                    │
+        ▼                     ▼                    ▼
+┌──────────────────────────────────────────────────────────┐
+│ Third-Party Integrations                                  │
+│ - Google Maps API (geo-location)                         │
+│ - Payment Gateway (medicine orders)                      │
+│ - SMS/Push Notification Service (alerts)                 │
+└──────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────────────────────────────────┐
+│ Hardware Layer                                             │
+│ - Smartwatches (BLE)                                       │
+│ - Mobile phone sensors                                     │
+└──────────────────────────────────────────────────────────┘
+
+
+
+
+<!-- Data Base Ar -->
+
+┌──────────────────────┐        ┌──────────────────────┐
+│       Users           │        │      Doctors         │
+│──────────────────────│        │──────────────────────│
+│ id (PK)              │        │ id (PK)              │
+│ name                 │        │ user_id (FK)         │───┐
+│ email                │        │ specialization       │   │
+│ phone                │        │ license_no           │   │
+│ role (patient/doctor)│        │ experience_years      │   │
+│ password_hash        │        │ rating               │   │
+│ created_at           │        │ created_at           │   │
+└──────────────────────┘        └──────────────────────┘   │
+         ▲                                                    │
+         │                                                    │
+         │                                                    ▼
+         │                                           ┌──────────────────────┐
+         │                                           │Doctor_Availability   │
+         │                                           │──────────────────────│
+         │                                           │ id (PK)              │
+         │                                           │ doctor_id (FK)       │
+         │                                           │ day_of_week          │
+         │                                           │ start_time           │
+         │                                           │ end_time             │
+         │                                           └──────────────────────┘
+         │
+         │
+┌──────────────────────┐
+│    Vitals_Records     │
+│──────────────────────│
+│ id (PK)              │
+│ patient_id (FK)      │
+│ heart_rate           │
+│ spo2                 │
+│ temperature          │
+│ timestamp            │
+└──────────────────────┘
+         │
+         │
+         ▼
+┌──────────────────────┐        ┌──────────────────────┐
+│  Alerts              │        │   Appointments       │
+│──────────────────────│        │──────────────────────│
+│ id (PK)              │        │ id (PK)              │
+│ patient_id (FK)      │        │ patient_id (FK)      │
+│ doctor_id (FK)       │        │ doctor_id (FK)       │
+│ vitals_id (FK)       │        │ scheduled_time       │
+│ alert_type           │        │ status               │
+│ status               │        │ notes               │
+│ created_at           │        │ created_at           │
+└──────────────────────┘        └──────────────────────┘
+         │
+         │
+         ▼
+┌──────────────────────┐        ┌──────────────────────┐
+│ Medicine_Orders      │        │   Deliveries         │
+│──────────────────────│        │──────────────────────│
+│ id (PK)              │        │ id (PK)              │
+│ alert_id (FK)        │        │ order_id (FK)        │
+│ medicine_name        │        │ driver_id (FK)       │
+│ dosage               │        │ delivery_status      │
+│ quantity             │        │ eta                  │
+│ status               │        │ completed_at         │
+│ created_at           │        └──────────────────────┘
+└──────────────────────┘
+
+
+
+
+Entity Relationships
+Users
+
+Holds all user data (both patients and doctors)
+
+role differentiates patient vs doctor
+
+Doctors
+
+Extended profile for doctors (linked via user_id)
+
+Vitals_Records
+
+Time-series vitals for patients (linked via patient_id)
+
+Alerts
+
+Generated when AI detects anomalies in vitals
+
+Appointments
+
+Booked consultations between patient and doctor
+
+Medicine_Orders
+
+Prescription orders linked to alerts
+
+Deliveries
+
+Delivery tracking for medicine or in-person visits
+
+Doctor_Availability
+
+Schedule for each doctor
+
