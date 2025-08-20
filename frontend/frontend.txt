@@ -1,2 +1,0 @@
-for creating frontend ::: 
-npx create-turbo@latest healthHive-frontend
